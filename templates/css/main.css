@@ -3,6 +3,21 @@
 body {
 	font-family: 'Open Sans', sans-serif;
 }
+a {
+	text-decoration: none;
+}
 h2 {
+	color: #555;
+}
+.button {
+	display: inline-block;
+	height: 40px
+	line-height: 40px;
+	padding: 0 10px;
+	border: 1px solid #999;
+	color: #999;
+}
+.button:hover {
+	border: 1px solid #555;
 	color: #555;
 }
