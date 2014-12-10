@@ -3,7 +3,10 @@ var express = require('express'),
   app = express();
 
 var fs = require('fs'),
-  movie_mp4;
+    url = require("url"),
+    path = require("path");
+
+
 app.set('view engine', 'jade');
 
 app.use("*/css", express.static(__dirname+'/templates/css'));
@@ -18,34 +21,33 @@ app.get('/video', function(req, res) {
 
 app.get('/movies/*', function(req, res) {
 
-  fs.readFile('movies/GoPro3.mp4', function(err, data){
-    if(err) throw err;
-    movie_mp4 = data;
-    /* begin */
-    var total = movie_mp4.length;
-    console.log(total);
-    
-    var range = req.headers.range;
-    console.log(req.headers);
+  var file = 'GoPro3.mp4';
+  /* sent headers*/
+  var file = path.resolve(__dirname, 'movies/'+file);
+  var range = req.headers.range;
+  var positions = range.replace(/bytes=/, "").split("-");
+  var start = parseInt(positions[0], 10);
 
-    var positions = range.replace(/bytes=/, "").split("-");
-
-    var start = parseInt(positions[0], 10);
+  fs.stat(file, function(err, stats) {
+    var total = stats.size;
     var end = positions[1] ? parseInt(positions[1], 10) : total - 1;
+    var chunksize = (end - start) + 1;
 
-    var chunksize = (end-start)+1;
-    console.log(chunksize);
-
-
-    res.status(206);
-    res.set({
-      "Content-Range": "bytes " + start + "-" + end + "/" + total, 
+    res.writeHead(206, {
+      "Content-Range": "bytes " + start + "-" + end + "/" + total,
       "Accept-Ranges": "bytes",
       "Content-Length": chunksize,
-      "Content-Type": "video/mp4"});
-    res.end(movie_mp4.slice(start, end+1), "binary");
-    /* end */
+      "Content-Type": "video/mp4"
+    });
+    /* create stream */
+    var stream = fs.createReadStream(file, { start: start, end: end })
+      .on("open", function() {
+        stream.pipe(res);
+      }).on("error", function(err) {
+        res.end(err);
+      });
   });
+
 });
 
 
@@ -53,7 +55,7 @@ app.get('*', function(req, res) {
   res.status(404).render(__dirname+'/templates/404');
 });
 
-var server = app.listen(3000, function() {
+var server = app.listen(3000, '127.0.0.1', function() {
   var host = server.address().address,
       port = server.address().port;
 
