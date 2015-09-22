@@ -21,7 +21,7 @@ app.get('/video', function(req, res) {
 
 app.get('/movies/*', function(req, res) {
 
-  var file = 'GoPro3.mp4';
+  var file = 'GoPro.mp4';
   /* sent headers*/
   var file = path.resolve(__dirname, 'movies/'+file);
   var range = req.headers.range;
